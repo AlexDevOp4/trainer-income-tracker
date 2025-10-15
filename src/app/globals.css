@@ -1,0 +1,7 @@
+@import "tailwindcss";        /* v4 single import */
+
+/* optional: add your own layer styles below
+@layer utilities {
+  .debug { outline: 1px solid red; }
+}
+*/
