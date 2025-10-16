@@ -1,5 +1,10 @@
 {
   "pages": {
+    "/api/supabase-clients/[id]/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/supabase-clients/[id]/route.js"
+    ],
     "/layout": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
@@ -16,10 +21,10 @@
       "static/chunks/main-app.js",
       "static/chunks/app/api/supabase-clients/route.js"
     ],
-    "/api/supabase-clients/[id]/route": [
+    "/clients/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/api/supabase-clients/[id]/route.js"
+      "static/chunks/app/clients/page.js"
     ]
   }
 }

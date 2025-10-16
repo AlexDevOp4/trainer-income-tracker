@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from '../../../lib/supabaseAdmin';
+export const runtime = "nodejs";
 
 const DEV_USER_ID = process.env.DEV_USER_ID!
-export const runtime = "nodejs"; // ensures Node runtime (access to process.env)
 
 export async function POST(req: Request) {
   try {
@@ -26,17 +26,12 @@ export async function POST(req: Request) {
 }
 
 export async function GET() {
-  try {
-
-    const { data, error } = await supabaseAdmin.from("Client").select("*").order("createdAt", { ascending: false })
-
-    if (error) throw error;
-    return NextResponse.json({ clients: data }, { status: 200 })
-
-  } catch (err: any) {
-    console.error("Supabase fetch error:", err.message)
-    return NextResponse.json({ error: err.message }, { status: 500 })
-  }
+  const { data, error } = await supabaseAdmin
+    .from("Client")
+    .select("*")
+    .order("createdAt", { ascending: false });
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  return NextResponse.json({ clients: data }, { status: 200 });
 }
 
 export async function PATCH(req: Request, { params }: { params: { id: string } }) {
