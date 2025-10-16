@@ -72,10 +72,26 @@ export default function Home() {
   };
 
 
-  const changeStatus = async (e) => {
-    const user = clients.filter((usr) => usr.email == e.target.value);
-    console.log(user);
+  const updateClient = async (id: string, updates: Record<string, any>) => {
+    try {
+      const res = await fetch(`/api/supabase-clients/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updates),
+      });
+
+      if (!res.ok) throw new Error(`Update failed: ${res.status}`);
+      const data = await res.json();
+      console.log("Updated client:", data.client);
+
+      // Optionally re-fetch client list
+      await getClients();
+
+    } catch (err) {
+      console.error("Update error:", err);
+    }
   };
+
 
   return (
     <div className="isolate bg-white px-6 py-24 sm:py-32 lg:px-8 dark:bg-gray-900">
@@ -223,21 +239,15 @@ export default function Home() {
             </h3>
             <form
               onSubmit={async (e) => {
+                console.log(selectedClient)
                 e.preventDefault();
-                // Example: call your API to update client
-                const res = await fetch(`/api/clients/${selectedClient.id}`, {
-                  method: "PUT",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify(selectedClient),
-                });
-                if (res.ok) {
-                  const updated = await res.json();
-                  setClients((prev) =>
-                    prev.map((cl) => (cl.id === updated.id ? updated : cl))
-                  );
-                  setIsModalOpen(false);
-                  setSelectedClient(null);
-                }
+
+                await updateClient(selectedClient.id, selectedClient)
+                await getClients()
+
+
+                setIsModalOpen(false);
+                setSelectedClient(null);
               }}
             >
               <div className="space-y-3">

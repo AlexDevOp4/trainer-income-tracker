@@ -29,12 +29,38 @@ export async function GET() {
   try {
 
     const { data, error } = await supabaseAdmin.from("Client").select("*").order("createdAt", { ascending: false })
-    
+
     if (error) throw error;
-    return NextResponse.json({ clients: data }, {status: 200})
-    
+    return NextResponse.json({ clients: data }, { status: 200 })
+
   } catch (err: any) {
     console.error("Supabase fetch error:", err.message)
-    return NextResponse.json({ error: err.message}, {status: 500})
+    return NextResponse.json({ error: err.message }, { status: 500 })
   }
-}     
+}
+
+export async function PATCH(req: Request, { params }: { params: { id: string } }) {
+  try {
+
+    const clientId = params.id;
+    const updates = await req.json()
+
+    if (!clientId) {
+      return NextResponse.json({ error: "Client ID required" }, { status: 400 })
+    }
+
+    if (Object.keys(updates).length === 0) {
+      return NextResponse.json({ error: "No fields provided" }, { status: 400 })
+    }
+
+    const { data, error } = await supabaseAdmin.from("Client").update(updates).eq("id", clientId).select("*").single()
+
+    if (error) throw error
+
+    return NextResponse.json({ client: data }, {status: 200 })
+
+  } catch (err: any) {
+    console.log("Supabse update error:", err.message)
+    return NextResponse.json({ error: err.message }, {status: 500})
+  }
+}
