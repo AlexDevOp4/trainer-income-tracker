@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { TrashIcon } from "@heroicons/react/24/solid";
+import SignOut from "../components/SignOut";
 
 type Client = {
   id: string;
@@ -42,10 +43,7 @@ export default function Clients() {
 
 
   useEffect(() => {
-
-
     getClients()
-
   }, [])
 
 
@@ -140,6 +138,9 @@ export default function Clients() {
           }}
           className="relative left-1/2 -z-10 aspect-1155/678 w-144.5 max-w-none -translate-x-1/2 rotate-30 bg-linear-to-tr from-[#ff80b5] to-[#9089fc] opacity-30 sm:left-[calc(50%-40rem)] sm:w-288.75 dark:opacity-20"
         />
+      </div>
+      <div>
+        <SignOut />
       </div>
       <div className="mx-auto max-w-2xl text-center">
         <h2 className="text-4xl font-semibold tracking-tight text-balance text-gray-900 sm:text-5xl dark:text-white">
