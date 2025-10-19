@@ -126,7 +126,24 @@ exports.Prisma.ClientScalarFieldEnum = {
   fullName: 'fullName',
   email: 'email',
   status: 'status',
+  costCents: 'costCents',
   createdAt: 'createdAt'
+};
+
+exports.Prisma.SessionScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  clientId: 'clientId',
+  performedAt: 'performedAt',
+  status: 'status',
+  priceCentsAtTime: 'priceCentsAtTime',
+  feeCents: 'feeCents',
+  durationMinutes: 'durationMinutes',
+  notes: 'notes',
+  cancelledAt: 'cancelledAt',
+  cancelReason: 'cancelReason',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
 };
 
 exports.Prisma.PaymentScalarFieldEnum = {
@@ -174,6 +191,12 @@ exports.ClientStatus = exports.$Enums.ClientStatus = {
   inactive: 'inactive'
 };
 
+exports.SessionStatus = exports.$Enums.SessionStatus = {
+  completed: 'completed',
+  canceled: 'canceled',
+  no_show: 'no_show'
+};
+
 exports.PaymentCategory = exports.$Enums.PaymentCategory = {
   session: 'session',
   package: 'package',
@@ -183,6 +206,7 @@ exports.PaymentCategory = exports.$Enums.PaymentCategory = {
 
 exports.Prisma.ModelName = {
   Client: 'Client',
+  Session: 'Session',
   Payment: 'Payment',
   ClientMonthlySummary: 'ClientMonthlySummary'
 };

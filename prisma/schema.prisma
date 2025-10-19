@@ -10,8 +10,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model Client {
@@ -20,6 +21,7 @@ model Client {
   fullName  String
   email     String?
   status    ClientStatus           @default(active)
+  costCents Int
   payments  Payment[]
   summaries ClientMonthlySummary[]
   createdAt DateTime               @default(now())
@@ -31,6 +33,34 @@ enum ClientStatus {
   active
   paused
   inactive
+}
+
+enum SessionStatus {
+  completed
+  canceled
+  no_show
+}
+
+model Session {
+  id               String        @id @default(uuid())
+  userId           String
+  clientId         String
+  performedAt      DateTime      @db.Timestamptz(6)
+  status           SessionStatus @default(completed)
+  priceCentsAtTime Int           @default(0)
+  feeCents         Int           @default(0) // optional, 0 if no fee
+  durationMinutes  Int?
+  notes            String?
+  cancelledAt      DateTime?     @db.Timestamptz(6)
+  cancelReason     String?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  // Relations (assuming you’ll hook up Prisma relations later)
+  // client          Client        @relation(fields: [clientId], references: [id])
+
+  @@index([userId, performedAt])
+  @@index([userId, clientId, performedAt])
 }
 
 model Payment {

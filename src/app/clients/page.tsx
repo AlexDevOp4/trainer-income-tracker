@@ -16,6 +16,7 @@ type Client = {
 export default function Clients() {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
+  const [costCents, setCostCents] = useState(75)
   const [status, setStatus] = useState<"active" | "paused" | "inactive">(
     "active"
   );
@@ -28,16 +29,22 @@ export default function Clients() {
       email?: string | null;
       status: "active" | "paused" | "inactive";
       createdAt: string;
+      costCents: number;
     }>
   >([]);
 
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  function convertDollarsToCents(dollars: number) {
+    return Math.round(dollars * 100);
+  }
+
   const getClients = async () => {
     const res = await fetch("/api/supabase-clients", { cache: "no-store" });
     if (!res.ok) throw new Error(`GET failed: ${res.status}`);
     const { clients } = await res.json();
+    console.log(clients)
     setClients(clients);
   };
 
@@ -58,6 +65,7 @@ export default function Clients() {
           fullName: fullName,
           email,
           status,
+          costCents: convertDollarsToCents(costCents)
         }),
       });
 
@@ -197,6 +205,27 @@ export default function Clients() {
 
           <div className="sm:col-span-2">
             <label
+              htmlFor="email"
+              className="block text-sm/6 font-semibold text-gray-900 dark:text-white"
+            >
+              Cost Per Session (USD)
+            </label>
+            <div className="mt-2.5">
+              <input
+                id="costCents"
+                name="costCents"
+                type="number"
+                autoComplete="costCents"
+                value={costCents}
+                onChange={(e) => setCostCents(e.target.value)}
+                className="block w-full rounded-md bg-white px-3.5 py-2 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 dark:bg-white/5 dark:text-white dark:outline-white/10 dark:placeholder:text-gray-500 dark:focus:outline-indigo-500"
+                placeholder="75"
+              />
+            </div>
+          </div>
+
+          <div className="sm:col-span-2">
+            <label
               htmlFor="status"
               className="block text-sm/6 font-semibold text-gray-900 dark:text-white"
             >
@@ -260,6 +289,9 @@ export default function Clients() {
               )}
               <p className="mt-1 text-xs text-gray-500 dark:text-gray-500">
                 Added {new Date(c.createdAt).toLocaleString()}
+              </p>
+              <p className="mt-1 text-xs text-gray-500 dark:text-gray-500">
+                Price Per Session: {(c.costCents / 100).toLocaleString("en-US", { style: "currency", currency: "USD" })}
               </p>
             </div>
           ))

@@ -59,3 +59,16 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
     return NextResponse.json({ error: err.message }, {status: 500})
   }
 }
+
+//? Docker Configuration
+//! Comment out when on a better network
+// import { NextResponse } from "next/server";
+// import { PrismaClient } from "@prisma/client";
+// const prisma = new PrismaClient();
+
+// export async function GET() {
+//   const clients = await prisma.client.findMany({
+//     orderBy: { createdAt: "desc" },
+//   });
+//   return NextResponse.json({ clients });
+// }

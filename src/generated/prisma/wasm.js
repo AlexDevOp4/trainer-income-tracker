@@ -98,7 +98,24 @@ exports.Prisma.ClientScalarFieldEnum = {
   fullName: 'fullName',
   email: 'email',
   status: 'status',
+  costCents: 'costCents',
   createdAt: 'createdAt'
+};
+
+exports.Prisma.SessionScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  clientId: 'clientId',
+  performedAt: 'performedAt',
+  status: 'status',
+  priceCentsAtTime: 'priceCentsAtTime',
+  feeCents: 'feeCents',
+  durationMinutes: 'durationMinutes',
+  notes: 'notes',
+  cancelledAt: 'cancelledAt',
+  cancelReason: 'cancelReason',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
 };
 
 exports.Prisma.PaymentScalarFieldEnum = {
@@ -146,6 +163,12 @@ exports.ClientStatus = exports.$Enums.ClientStatus = {
   inactive: 'inactive'
 };
 
+exports.SessionStatus = exports.$Enums.SessionStatus = {
+  completed: 'completed',
+  canceled: 'canceled',
+  no_show: 'no_show'
+};
+
 exports.PaymentCategory = exports.$Enums.PaymentCategory = {
   session: 'session',
   package: 'package',
@@ -155,6 +178,7 @@ exports.PaymentCategory = exports.$Enums.PaymentCategory = {
 
 exports.Prisma.ModelName = {
   Client: 'Client',
+  Session: 'Session',
   Payment: 'Payment',
   ClientMonthlySummary: 'ClientMonthlySummary'
 };
@@ -187,7 +211,7 @@ const config = {
     "isCustomOutput": true
   },
   "relativeEnvPaths": {
-    "rootEnvPath": null,
+    "rootEnvPath": "../../../.env",
     "schemaEnvPath": "../../../.env"
   },
   "relativePath": "../../../prisma",
@@ -197,7 +221,7 @@ const config = {
     "db"
   ],
   "activeProvider": "postgresql",
-  "postinstall": true,
+  "postinstall": false,
   "inlineDatasources": {
     "db": {
       "url": {
@@ -206,13 +230,13 @@ const config = {
       }
     }
   },
-  "inlineSchema": "// This is your Prisma schema file,\n// learn more about it in the docs: https://pris.ly/d/prisma-schema\n\n// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?\n// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init\n\ngenerator client {\n  provider = \"prisma-client-js\"\n  output   = \"../src/generated/prisma\"\n}\n\ndatasource db {\n  provider = \"postgresql\"\n  url      = env(\"DATABASE_URL\")\n}\n\nmodel Client {\n  id        String                 @id @default(uuid())\n  userId    String\n  fullName  String\n  email     String?\n  status    ClientStatus           @default(active)\n  payments  Payment[]\n  summaries ClientMonthlySummary[]\n  createdAt DateTime               @default(now())\n\n  @@index([userId, status])\n}\n\nenum ClientStatus {\n  active\n  paused\n  inactive\n}\n\nmodel Payment {\n  id        String          @id @default(uuid())\n  userId    String\n  clientId  String\n  amount    Decimal         @db.Decimal(12, 2)\n  currency  String          @default(\"USD\")\n  category  PaymentCategory @default(session)\n  note      String?\n  paidAt    DateTime\n  createdAt DateTime        @default(now())\n  updatedAt DateTime        @updatedAt\n\n  client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)\n\n  @@index([userId, paidAt])\n  @@index([clientId, paidAt])\n  @@index([userId, clientId, paidAt])\n}\n\nenum PaymentCategory {\n  session\n  package\n  subscription\n  other\n}\n\nmodel ClientMonthlySummary {\n  id          String   @id @default(uuid())\n  userId      String\n  clientId    String\n  year        Int\n  month       Int\n  totalAmount Decimal  @db.Decimal(12, 2)\n  currency    String   @default(\"USD\")\n  finalizedAt DateTime @default(now())\n  createdAt   DateTime @default(now())\n\n  client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)\n\n  @@unique([userId, clientId, year, month])\n  @@index([userId, year, month])\n  @@index([clientId, year, month])\n}\n",
-  "inlineSchemaHash": "74e23fd2290048aedde3f382a9c355f9cffda049685204891e186ace6086acf4",
+  "inlineSchema": "// This is your Prisma schema file,\n// learn more about it in the docs: https://pris.ly/d/prisma-schema\n\n// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?\n// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init\n\ngenerator client {\n  provider = \"prisma-client-js\"\n  output   = \"../src/generated/prisma\"\n}\n\ndatasource db {\n  provider  = \"postgresql\"\n  url       = env(\"DATABASE_URL\")\n  directUrl = env(\"DIRECT_URL\")\n}\n\nmodel Client {\n  id        String                 @id @default(uuid())\n  userId    String\n  fullName  String\n  email     String?\n  status    ClientStatus           @default(active)\n  costCents Int\n  payments  Payment[]\n  summaries ClientMonthlySummary[]\n  createdAt DateTime               @default(now())\n\n  @@index([userId, status])\n}\n\nenum ClientStatus {\n  active\n  paused\n  inactive\n}\n\nenum SessionStatus {\n  completed\n  canceled\n  no_show\n}\n\nmodel Session {\n  id               String        @id @default(uuid())\n  userId           String\n  clientId         String\n  performedAt      DateTime      @db.Timestamptz(6)\n  status           SessionStatus @default(completed)\n  priceCentsAtTime Int           @default(0)\n  feeCents         Int           @default(0) // optional, 0 if no fee\n  durationMinutes  Int?\n  notes            String?\n  cancelledAt      DateTime?     @db.Timestamptz(6)\n  cancelReason     String?\n  createdAt        DateTime      @default(now())\n  updatedAt        DateTime      @updatedAt\n\n  // Relations (assuming you’ll hook up Prisma relations later)\n  // client          Client        @relation(fields: [clientId], references: [id])\n\n  @@index([userId, performedAt])\n  @@index([userId, clientId, performedAt])\n}\n\nmodel Payment {\n  id        String          @id @default(uuid())\n  userId    String\n  clientId  String\n  amount    Decimal         @db.Decimal(12, 2)\n  currency  String          @default(\"USD\")\n  category  PaymentCategory @default(session)\n  note      String?\n  paidAt    DateTime\n  createdAt DateTime        @default(now())\n  updatedAt DateTime        @updatedAt\n\n  client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)\n\n  @@index([userId, paidAt])\n  @@index([clientId, paidAt])\n  @@index([userId, clientId, paidAt])\n}\n\nenum PaymentCategory {\n  session\n  package\n  subscription\n  other\n}\n\nmodel ClientMonthlySummary {\n  id          String   @id @default(uuid())\n  userId      String\n  clientId    String\n  year        Int\n  month       Int\n  totalAmount Decimal  @db.Decimal(12, 2)\n  currency    String   @default(\"USD\")\n  finalizedAt DateTime @default(now())\n  createdAt   DateTime @default(now())\n\n  client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)\n\n  @@unique([userId, clientId, year, month])\n  @@index([userId, year, month])\n  @@index([clientId, year, month])\n}\n",
+  "inlineSchemaHash": "cf0b4f1453050b7f140ea6b5415dae2b2d2d9b95f69ec6bb8ef5c4dd73fcbea1",
   "copyEngine": true
 }
 config.dirname = '/'
 
-config.runtimeDataModel = JSON.parse("{\"models\":{\"Client\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"userId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"fullName\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"email\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"status\",\"kind\":\"enum\",\"type\":\"ClientStatus\"},{\"name\":\"payments\",\"kind\":\"object\",\"type\":\"Payment\",\"relationName\":\"ClientToPayment\"},{\"name\":\"summaries\",\"kind\":\"object\",\"type\":\"ClientMonthlySummary\",\"relationName\":\"ClientToClientMonthlySummary\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"}],\"dbName\":null},\"Payment\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"userId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"clientId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"amount\",\"kind\":\"scalar\",\"type\":\"Decimal\"},{\"name\":\"currency\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"category\",\"kind\":\"enum\",\"type\":\"PaymentCategory\"},{\"name\":\"note\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"paidAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"client\",\"kind\":\"object\",\"type\":\"Client\",\"relationName\":\"ClientToPayment\"}],\"dbName\":null},\"ClientMonthlySummary\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"userId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"clientId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"year\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"month\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"totalAmount\",\"kind\":\"scalar\",\"type\":\"Decimal\"},{\"name\":\"currency\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"finalizedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"client\",\"kind\":\"object\",\"type\":\"Client\",\"relationName\":\"ClientToClientMonthlySummary\"}],\"dbName\":null}},\"enums\":{},\"types\":{}}")
+config.runtimeDataModel = JSON.parse("{\"models\":{\"Client\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"userId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"fullName\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"email\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"status\",\"kind\":\"enum\",\"type\":\"ClientStatus\"},{\"name\":\"costCents\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"payments\",\"kind\":\"object\",\"type\":\"Payment\",\"relationName\":\"ClientToPayment\"},{\"name\":\"summaries\",\"kind\":\"object\",\"type\":\"ClientMonthlySummary\",\"relationName\":\"ClientToClientMonthlySummary\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"}],\"dbName\":null},\"Session\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"userId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"clientId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"performedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"status\",\"kind\":\"enum\",\"type\":\"SessionStatus\"},{\"name\":\"priceCentsAtTime\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"feeCents\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"durationMinutes\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"notes\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"cancelledAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"cancelReason\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"}],\"dbName\":null},\"Payment\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"userId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"clientId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"amount\",\"kind\":\"scalar\",\"type\":\"Decimal\"},{\"name\":\"currency\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"category\",\"kind\":\"enum\",\"type\":\"PaymentCategory\"},{\"name\":\"note\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"paidAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"client\",\"kind\":\"object\",\"type\":\"Client\",\"relationName\":\"ClientToPayment\"}],\"dbName\":null},\"ClientMonthlySummary\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"userId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"clientId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"year\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"month\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"totalAmount\",\"kind\":\"scalar\",\"type\":\"Decimal\"},{\"name\":\"currency\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"finalizedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"client\",\"kind\":\"object\",\"type\":\"Client\",\"relationName\":\"ClientToClientMonthlySummary\"}],\"dbName\":null}},\"enums\":{},\"types\":{}}")
 defineDmmfProperty(exports.Prisma, config.runtimeDataModel)
 config.engineWasm = {
   getRuntime: async () => require('./query_engine_bg.js'),
